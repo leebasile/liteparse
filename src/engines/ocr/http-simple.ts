@@ -3,7 +3,6 @@ import FormData from "form-data";
 import fs from "fs";
 import { OcrEngine, OcrOptions, OcrResult } from "./interface.js";
 
-/** Response item from the HTTP OCR server */
 interface HttpOcrResponseItem {
   text: string;
   bbox: [number, number, number, number];

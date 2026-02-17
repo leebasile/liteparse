@@ -115,7 +115,6 @@ export interface ParsedPage {
   tables?: DetectedTable[];
 }
 
-/** JSON output format for parsed document */
 export interface ParseResultJson {
   pages: Array<{
     page: number;
