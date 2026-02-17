@@ -6,6 +6,50 @@ import { LiteParse } from "../src/core/parser.js";
 import { LiteParseConfig, OutputFormat } from "../src/core/types.js";
 import { performance } from "perf_hooks";
 
+/** Options for the parse command */
+interface ParseCommandOptions {
+  output?: string;
+  format?: string;
+  ocrServerUrl?: string;
+  ocr?: boolean;
+  ocrLanguage?: string;
+  maxPages?: string;
+  targetPages?: string;
+  dpi?: string;
+  tables?: boolean;
+  preciseBbox?: boolean;
+  skipDiagonalText?: boolean;
+  preserveSmallText?: boolean;
+  config?: string;
+  quiet?: boolean;
+}
+
+/** Options for the screenshot command */
+interface ScreenshotCommandOptions {
+  outputDir?: string;
+  pages?: string;
+  dpi?: string;
+  format?: string;
+  config?: string;
+  quiet?: boolean;
+}
+
+/** Options for the batch-parse command */
+interface BatchParseCommandOptions {
+  format?: string;
+  ocrServerUrl?: string;
+  ocr?: boolean;
+  ocrLanguage?: string;
+  maxPages?: string;
+  dpi?: string;
+  tables?: boolean;
+  preciseBbox?: boolean;
+  recursive?: boolean;
+  extension?: string;
+  config?: string;
+  quiet?: boolean;
+}
+
 const program = new Command();
 
 program
@@ -30,7 +74,7 @@ program
   .option("--preserve-small-text", "Preserve very small text")
   .option("--config <file>", "Config file (JSON)")
   .option("-q, --quiet", "Suppress progress output")
-  .action(async (file: string, options: any) => {
+  .action(async (file: string, options: ParseCommandOptions) => {
     try {
       const quiet = options.quiet || false;
 
@@ -59,9 +103,9 @@ program
         ocrEnabled: options.ocr !== false,
         ocrServerUrl: options.ocrServerUrl,
         ocrLanguage: options.ocrLanguage,
-        maxPages: parseInt(options.maxPages),
+        maxPages: parseInt(options.maxPages || "1000"),
         targetPages: options.targetPages,
-        dpi: parseInt(options.dpi),
+        dpi: parseInt(options.dpi || "150"),
         tableDetection: options.tables !== false,
         preciseBoundingBox: options.preciseBbox !== false,
         skipDiagonalText: options.skipDiagonalText || false,
@@ -96,10 +140,12 @@ program
         // Output result to stdout (can be piped)
         console.log(output);
       }
-    } catch (error: any) {
-      console.error(`\nError: ${error.message}`);
-      if (error.stack) {
-        console.error(error.stack);
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      const stack = error instanceof Error ? error.stack : undefined;
+      console.error(`\nError: ${message}`);
+      if (stack) {
+        console.error(stack);
       }
       process.exit(1);
     }
@@ -114,7 +160,7 @@ program
   .option("--format <format>", "Image format: png|jpg", "png")
   .option("--config <file>", "Config file (JSON)")
   .option("-q, --quiet", "Suppress progress output")
-  .action(async (file: string, options: any) => {
+  .action(async (file: string, options: ScreenshotCommandOptions) => {
     try {
       const quiet = options.quiet || false;
 
@@ -139,7 +185,7 @@ program
       // Override with CLI options
       config = {
         ...config,
-        dpi: parseInt(options.dpi),
+        dpi: parseInt(options.dpi || "150"),
       };
 
       // Parse target pages
@@ -148,9 +194,11 @@ program
         pageNumbers = parsePageNumbers(options.pages);
       }
 
+      const outputDir = options.outputDir || "./screenshots";
+
       // Create output directory
-      if (!existsSync(options.outputDir)) {
-        await fs.mkdir(options.outputDir, { recursive: true });
+      if (!existsSync(outputDir)) {
+        await fs.mkdir(outputDir, { recursive: true });
       }
 
       // Create parser
@@ -161,8 +209,8 @@ program
 
       // Save screenshots
       for (const result of results) {
-        const filename = `page_${result.pageNum}.${options.format}`;
-        const filepath = `${options.outputDir}/${filename}`;
+        const filename = `page_${result.pageNum}.${options.format || "png"}`;
+        const filepath = `${outputDir}/${filename}`;
         await fs.writeFile(filepath, result.imageBuffer);
         if (!quiet) {
           console.error(`✓ ${filepath} (${result.width}x${result.height})`);
@@ -170,12 +218,14 @@ program
       }
 
       if (!quiet) {
-        console.error(`\n✓ Generated ${results.length} screenshots → ${options.outputDir}`);
+        console.error(`\n✓ Generated ${results.length} screenshots → ${outputDir}`);
       }
-    } catch (error: any) {
-      console.error(`\nError: ${error.message}`);
-      if (error.stack) {
-        console.error(error.stack);
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      const stack = error instanceof Error ? error.stack : undefined;
+      console.error(`\nError: ${message}`);
+      if (stack) {
+        console.error(stack);
       }
       process.exit(1);
     }
@@ -238,7 +288,7 @@ program
   .option("--extension <ext>", 'Only process files with this extension (e.g., ".pdf")')
   .option("--config <file>", "Config file (JSON)")
   .option("-q, --quiet", "Suppress progress output")
-  .action(async (inputDir: string, outputDir: string, options: any) => {
+  .action(async (inputDir: string, outputDir: string, options: BatchParseCommandOptions) => {
     try {
       const quiet = options.quiet || false;
       const startTime = performance.now();
@@ -261,7 +311,7 @@ program
       }
 
       // Find all files to process
-      const files = findFiles(inputDir, options.recursive, options.extension);
+      const files = findFiles(inputDir, options.recursive || false, options.extension);
 
       if (files.length === 0) {
         console.error("No supported files found in input directory");
@@ -290,8 +340,8 @@ program
         ocrEnabled: options.ocr !== false,
         ocrServerUrl: options.ocrServerUrl,
         ocrLanguage: options.ocrLanguage,
-        maxPages: parseInt(options.maxPages),
-        dpi: parseInt(options.dpi),
+        maxPages: parseInt(options.maxPages || "1000"),
+        dpi: parseInt(options.dpi || "150"),
         tableDetection: options.tables !== false,
         preciseBoundingBox: options.preciseBbox !== false,
       };
@@ -336,10 +386,11 @@ program
               `[${i + 1}/${files.length}] ✓ ${relativePath} (${result.pages.length} pages, ${fileTime}ms)`
             );
           }
-        } catch (error: any) {
+        } catch (error: unknown) {
           errorCount++;
           if (!quiet) {
-            console.error(`[${i + 1}/${files.length}] ✗ ${relativePath}: ${error.message}`);
+            const message = error instanceof Error ? error.message : String(error);
+            console.error(`[${i + 1}/${files.length}] ✗ ${relativePath}: ${message}`);
           }
         }
       }
@@ -358,10 +409,12 @@ program
       if (errorCount > 0) {
         process.exit(1);
       }
-    } catch (error: any) {
-      console.error(`\nError: ${error.message}`);
-      if (error.stack) {
-        console.error(error.stack);
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      const stack = error instanceof Error ? error.stack : undefined;
+      console.error(`\nError: ${message}`);
+      if (stack) {
+        console.error(stack);
       }
       process.exit(1);
     }

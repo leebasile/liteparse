@@ -115,10 +115,31 @@ export interface ParsedPage {
   tables?: DetectedTable[];
 }
 
+/** JSON output format for parsed document */
+export interface ParseResultJson {
+  pages: Array<{
+    page: number;
+    width: number;
+    height: number;
+    text: string;
+    textItems: Array<{
+      text: string;
+      x: number;
+      y: number;
+      width: number;
+      height: number;
+      fontName?: string;
+      fontSize?: number;
+    }>;
+    boundingBoxes: BoundingBox[];
+    tables: DetectedTable[];
+  }>;
+}
+
 export interface ParseResult {
   pages: ParsedPage[];
   text: string;
-  json?: any;
+  json?: ParseResultJson;
 }
 
 export interface ScreenshotResult {
