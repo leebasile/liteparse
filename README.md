@@ -28,7 +28,7 @@ LiteParse is a standalone OSS PDF parsing tool focused exclusively on **fast and
 Install globally via npm to use the `liteparse` command anywhere:
 
 ```bash
-npm i -g liteparse
+npm i -g @llamaindex/liteparse
 ```
 
 Then use it:
