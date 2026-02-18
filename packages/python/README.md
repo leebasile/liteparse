@@ -31,10 +31,6 @@ print(result.text)
 # Access structured data
 for page in result.pages:
     print(f"Page {page.pageNum}: {len(page.textItems)} text items")
-
-    # Detected tables from heuristic line analysis
-    for table in page.tables:
-        print(f"  Table: {table.rows}x{table.cols}")
 ```
 
 ## Configuration
@@ -90,7 +86,6 @@ class LiteParse:
         ocr_language: str = "en",
         max_pages: int = 1000,
         dpi: int = 150,
-        table_detection: bool = True,
         precise_bounding_box: bool = True,
         cli_path: Optional[str] = None,
     ): ...
@@ -156,7 +151,6 @@ class ParsedPage:
     text: str
     textItems: List[TextItem]
     boundingBoxes: List[BoundingBox]
-    tables: List[DetectedTable]
 ```
 
 ## Supported Formats

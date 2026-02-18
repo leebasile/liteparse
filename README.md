@@ -16,7 +16,6 @@ LiteParse is a standalone OSS PDF parsing tool focused exclusively on **fast and
 - **Screenshot Generation**: Generate high-quality page screenshots for LLM agents
 - **Multiple Output Formats**: JSON and Text
 - **Bounding Boxes**: Precise text positioning information
-- **Table Detection**: Heuristic table detection (outlined tables)
 - **Standalone Binary**: No cloud dependencies, runs entirely locally
 - **Multi-platform**: Linux, macOS (Intel/ARM), Windows
 
@@ -150,7 +149,6 @@ Options:
   --target-pages <pages>           Target pages (e.g., "1-5,10,15-20")
   --pdf-engine <engine>            PDF engine: pdfjs|pdfium (default: "pdfjs")
   --dpi <dpi>                      DPI for rendering (default: "150")
-  --no-tables                      Disable table detection
   --no-precise-bbox                Disable precise bounding boxes
   --skip-diagonal-text             Skip diagonal text
   --preserve-small-text            Preserve very small text
@@ -171,7 +169,6 @@ Options:
   --ocr-language <lang>   OCR language(s) (default: "en")
   --max-pages <n>         Max pages to parse per file (default: "1000")
   --dpi <dpi>             DPI for rendering (default: "150")
-  --no-tables             Disable table detection
   --no-precise-bbox       Disable precise bounding boxes
   --recursive             Recursively search input directory
   --extension <ext>       Only process files with this extension (e.g., ".pdf")
@@ -277,7 +274,6 @@ Create a `liteparse.config.json` file:
   "outputFormat": "json",
   "includeImages": true,
   "includeCharts": true,
-  "tableDetection": true,
   "preciseBoundingBox": true,
   "skipDiagonalText": false,
   "preserveVerySmallText": false

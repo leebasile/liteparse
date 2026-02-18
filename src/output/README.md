@@ -24,8 +24,6 @@ Output formatters that convert parsed document data into different formats.
       fontSize: number
     }],
     boundingBoxes: BoundingBox[],
-    tables: DetectedTable[],
-    images: Image[]
   }]
 }
 ```

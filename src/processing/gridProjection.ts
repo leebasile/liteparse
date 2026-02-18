@@ -1607,7 +1607,6 @@ export function projectPagesToGrid(pages: PageData[], config: LiteParseConfig): 
       text,
       textItems: page.textItems,
       boundingBoxes: [],
-      tables: [],
     });
   }
 

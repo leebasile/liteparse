@@ -8,7 +8,6 @@ import { TesseractEngine } from "../engines/ocr/tesseract.js";
 import { HttpOcrEngine } from "../engines/ocr/http-simple.js";
 import { projectPagesToGrid } from "../processing/grid.js";
 import { buildBoundingBoxes } from "../processing/bbox.js";
-import { detectTables } from "../processing/tables.js";
 import { formatJSON } from "../output/json.js";
 import { convertToPdf, cleanupConversionFiles } from "../conversion/convertToPdf.js";
 
@@ -95,15 +94,6 @@ export class LiteParse {
     if (this.config.preciseBoundingBox) {
       for (const page of processedPages) {
         page.boundingBoxes = buildBoundingBoxes(page.textItems);
-      }
-    }
-
-    // Detect tables if enabled
-    if (this.config.tableDetection) {
-      for (let i = 0; i < processedPages.length; i++) {
-        const page = processedPages[i];
-        const tables = detectTables(pages[i].paths, pages[i].textItems);
-        page.tables = tables;
       }
     }
 

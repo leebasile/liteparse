@@ -14,7 +14,6 @@ export type HorizontalLine = Line;
 
 /**
  * Extract vertical and horizontal lines from PDF paths
- * This is used to detect table borders and layout structure
  */
 export function getVerticalAndHorizontalLinesFromPagePaths(
   _config: LiteParseConfig,
@@ -53,7 +52,7 @@ export function getVerticalAndHorizontalLinesFromPagePaths(
         });
       }
     }
-    // Handle rectangles as potential table borders
+    // Handle rectangles as potential borders
     else if (path.type === "rectangle" && path.points.length >= 4) {
       const xs = path.points.map((p) => p[0]);
       const ys = path.points.map((p) => p[1]);

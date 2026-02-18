@@ -25,9 +25,8 @@ The core module contains the main orchestrator class, configuration management, 
 4. Run OCR on text-sparse pages/embedded images
 5. Project pages to grid (spatial text reconstruction)
 6. Build bounding boxes (if enabled)
-7. Detect tables (if enabled)
-8. Format output (JSON or text)
-9. Cleanup resources
+7. Format output (JSON or text)
+8. Cleanup resources
 
 **Design Decisions:**
 - **Engine auto-detection**: If `ocrServerUrl` is provided, uses HTTP OCR; otherwise defaults to Tesseract.js for zero-setup experience
@@ -48,7 +47,7 @@ The core module contains the main orchestrator class, configuration management, 
 - `TextItem` - Individual text element with position, font, rotation
 - `ProjectionTextBox` - Extended text item with projection metadata (snap, anchors, etc.)
 - `BoundingBox` - Coordinates (x1, y1, x2, y2)
-- `ParsedPage` - Complete page data (text, textItems, tables, images)
+- `ParsedPage` - Complete page data (text, textItems)
 - `ParseResult` - Final parse output
 - `ScreenshotResult` - Screenshot output with image buffer
 
@@ -84,7 +83,6 @@ The core module contains the main orchestrator class, configuration management, 
   outputFormat: 'json',
   includeImages: true,
   includeCharts: true,
-  tableDetection: true,
   preciseBoundingBox: true,
   skipDiagonalText: false,
   preserveVerySmallText: false,

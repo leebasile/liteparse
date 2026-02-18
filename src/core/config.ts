@@ -18,7 +18,6 @@ export const DEFAULT_CONFIG: LiteParseConfig = {
   includeCharts: true,
 
   // Features
-  tableDetection: true,
   preciseBoundingBox: true,
   skipDiagonalText: false,
   preserveVerySmallText: false,

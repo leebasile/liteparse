@@ -25,7 +25,6 @@ Parse documents and extract text.
 | `--max-pages <n>` | Maximum pages to parse | `1000` |
 | `--target-pages <pages>` | Specific pages (e.g., "1-5,10") | all |
 | `--dpi <dpi>` | Render resolution | `150` |
-| `--no-tables` | Disable table detection | enabled |
 | `--no-precise-bbox` | Disable bounding boxes | enabled |
 | `--skip-diagonal-text` | Skip diagonal/rotated text | false |
 | `--preserve-small-text` | Keep very small text | false |
@@ -91,7 +90,6 @@ Both commands accept `--config <file>` to load settings from JSON:
   "maxPages": 100,
   "dpi": 200,
   "outputFormat": "json",
-  "tableDetection": true,
   "preciseBoundingBox": true
 }
 ```

@@ -10,7 +10,6 @@
 - **Spatial text extraction** with precise bounding boxes
 - **Flexible OCR** (built-in Tesseract.js or pluggable HTTP servers)
 - **Multi-format support** (PDFs, DOCX, XLSX, PPTX, images via conversion)
-- **Table detection** via heuristic line/path analysis
 - **TypeScript/Node.js** with both library and CLI interfaces
 
 ## Directory Structure
@@ -42,7 +41,7 @@ liteparse/
 3. **PDF Loading**: PDF.js extracts text items, paths, images, metadata
 4. **OCR** (if enabled): Images rendered and OCR'd for text-sparse areas
 5. **Grid Projection**: Spatial reconstruction of text layout using anchor system
-6. **Post-processing**: Bounding boxes, table detection, text cleanup
+6. **Post-processing**: Bounding boxes, text cleanup
 7. **Output**: Formatted as JSON or plain text
 
 ## Key Design Decisions
@@ -86,7 +85,6 @@ Rather than implementing format parsers, LiteParse converts non-PDF formats usin
 The processing pipeline is in `src/processing/`. Key files:
 - `gridProjection.ts` - Layout reconstruction (most complex)
 - `bbox.ts` - Bounding box calculation
-- `tables.ts` - Table detection
 - `cleanText.ts` - Text cleanup
 
 ### Adding CLI Options

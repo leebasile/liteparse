@@ -20,7 +20,6 @@ export function buildJSON(pages: ParsedPage[]): ParseResultJson {
         fontSize: item.fontSize,
       })),
       boundingBoxes: page.boundingBoxes || [],
-      tables: page.tables || [],
     })),
   };
 }

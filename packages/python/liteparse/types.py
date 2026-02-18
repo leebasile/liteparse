@@ -42,30 +42,6 @@ class TextItem:
 
 
 @dataclass
-class TableCell:
-    """A cell within a detected table."""
-    x1: float
-    y1: float
-    x2: float
-    y2: float
-    text: str
-    row: int
-    col: int
-
-
-@dataclass
-class DetectedTable:
-    """A detected table in the document."""
-    x1: float
-    y1: float
-    x2: float
-    y2: float
-    rows: int
-    cols: int
-    cells: List[TableCell] = field(default_factory=list)
-
-
-@dataclass
 class ParsedPage:
     """A parsed page from a document."""
     pageNum: int
@@ -74,7 +50,6 @@ class ParsedPage:
     text: str
     textItems: List[TextItem] = field(default_factory=list)
     boundingBoxes: List[BoundingBox] = field(default_factory=list)
-    tables: List[DetectedTable] = field(default_factory=list)
 
 
 @dataclass

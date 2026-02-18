@@ -9,8 +9,6 @@ from .types import (
     ParsedPage,
     TextItem,
     BoundingBox,
-    DetectedTable,
-    TableCell,
     ScreenshotResult,
     ScreenshotBatchResult,
     # Errors
@@ -31,8 +29,6 @@ __all__ = [
     "ParsedPage",
     "TextItem",
     "BoundingBox",
-    "DetectedTable",
-    "TableCell",
     "ScreenshotResult",
     "ScreenshotBatchResult",
     # Errors

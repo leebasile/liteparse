@@ -22,7 +22,6 @@ interface ParseCommandOptions {
   maxPages?: string;
   targetPages?: string;
   dpi?: string;
-  tables?: boolean;
   preciseBbox?: boolean;
   skipDiagonalText?: boolean;
   preserveSmallText?: boolean;
@@ -46,7 +45,6 @@ interface BatchParseCommandOptions {
   ocrLanguage?: string;
   maxPages?: string;
   dpi?: string;
-  tables?: boolean;
   preciseBbox?: boolean;
   recursive?: boolean;
   extension?: string;
@@ -72,7 +70,6 @@ program
   .option("--max-pages <n>", "Max pages to parse", DEFAULT_MAX_PAGES.toString())
   .option("--target-pages <pages>", 'Target pages (e.g., "1-5,10,15-20")')
   .option("--dpi <dpi>", "DPI for rendering", DEFAULT_DPI.toString())
-  .option("--no-tables", "Disable table detection")
   .option("--no-precise-bbox", "Disable precise bounding boxes")
   .option("--skip-diagonal-text", "Skip diagonal text")
   .option("--preserve-small-text", "Preserve very small text")
@@ -110,7 +107,6 @@ program
         maxPages: parseInt(options.maxPages || DEFAULT_MAX_PAGES.toString()),
         targetPages: options.targetPages,
         dpi: parseInt(options.dpi || DEFAULT_DPI.toString()),
-        tableDetection: options.tables !== false,
         preciseBoundingBox: options.preciseBbox !== false,
         skipDiagonalText: options.skipDiagonalText || false,
         preserveVerySmallText: options.preserveSmallText || false,
@@ -286,7 +282,6 @@ program
   .option("--ocr-language <lang>", "OCR language(s)", DEFAULT_LANGUAGE)
   .option("--max-pages <n>", "Max pages to parse per file", DEFAULT_MAX_PAGES.toString())
   .option("--dpi <dpi>", "DPI for rendering", DEFAULT_DPI.toString())
-  .option("--no-tables", "Disable table detection")
   .option("--no-precise-bbox", "Disable precise bounding boxes")
   .option("--recursive", "Recursively search input directory")
   .option("--extension <ext>", 'Only process files with this extension (e.g., ".pdf")')
@@ -346,7 +341,6 @@ program
         ocrLanguage: options.ocrLanguage,
         maxPages: parseInt(options.maxPages || DEFAULT_MAX_PAGES.toString()),
         dpi: parseInt(options.dpi || DEFAULT_DPI.toString()),
-        tableDetection: options.tables !== false,
         preciseBoundingBox: options.preciseBbox !== false,
       };
 

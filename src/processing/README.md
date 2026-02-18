@@ -1,6 +1,6 @@
 # src/processing/
 
-The processing module is the **heart of LiteParse** - responsible for transforming raw PDF content into structured, spatially-aware text. This is where text extraction, layout reconstruction, table detection, and OCR integration happen.
+The processing module is the **heart of LiteParse** - responsible for transforming raw PDF content into structured, spatially-aware text. This is where text extraction, layout reconstruction, and OCR integration happen.
 
 ## Files
 
@@ -83,43 +83,10 @@ This is the core algorithm that converts raw PDF text items into readable, prope
 
 ---
 
-### tables.ts
-**Heuristic table detection via line intersection analysis.**
-
-Detects tables with explicit borders (outlined tables). Does not detect borderless tables.
-
-**Algorithm:**
-1. Extract horizontal and vertical lines from PDF paths
-2. Cluster nearby lines to reduce noise (5px threshold)
-3. Find line intersections (tolerance: 3px)
-4. Create grid cells from intersection points
-5. Assign text items to cells based on center point
-6. Validate table has minimum rows/cols (2x2, 4 cells min)
-
-**Key Functions:**
-- `detectTables(paths, textItems)` - Main entry point
-- `extractLines(paths)` - Gets lines from paths and rectangles
-- `findIntersections(horizontal, vertical)` - Finds grid points
-- `createCellsFromIntersections(intersections)` - Builds cell grid
-- `assignTextToCells(cells, textItems)` - Maps text to cells
-
-**Output:**
-```typescript
-interface DetectedTable {
-  x1, y1, x2, y2: number;  // Table bounds
-  rows, cols: number;       // Grid dimensions
-  cells: TableCell[];       // Cell data with text
-}
-```
-
-**Limitation:** Only works with outlined/bordered tables. Borderless tables require layout analysis not yet implemented.
-
----
-
 ### pathUtils.ts
 **Extract lines from PDF vector paths.**
 
-Provides input for table detection and layout analysis.
+Provides input for layout analysis.
 
 `getVerticalAndHorizontalLinesFromPagePaths(config, paths)`:
 - Extracts vertical lines (x1 ≈ x2) from line paths
@@ -240,6 +207,3 @@ Modify `OCR_OVERLAP_THRESHOLD` in `bbox.ts` (default: 0.5 = 50%).
 ### Adding new markup types
 1. Add field to `MarkupData` in `src/core/types.ts`
 2. Add case in `applyMarkupTags()` in `markupUtils.ts`
-
-### Improving table detection
-The current approach only handles bordered tables. To support borderless tables, you'd need to add layout analysis based on text alignment patterns in `tables.ts`.

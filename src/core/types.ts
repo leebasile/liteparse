@@ -1,5 +1,3 @@
-import { DetectedTable } from "../processing/tables.js";
-
 export type OutputFormat = "json" | "text";
 
 export interface LiteParseConfig {
@@ -21,7 +19,6 @@ export interface LiteParseConfig {
   includeCharts: boolean;
 
   // Features
-  tableDetection: boolean;
   preciseBoundingBox: boolean;
   skipDiagonalText: boolean;
   preserveVerySmallText: boolean;
@@ -112,7 +109,6 @@ export interface ParsedPage {
   text: string;
   textItems: TextItem[];
   boundingBoxes?: BoundingBox[];
-  tables?: DetectedTable[];
 }
 
 export interface ParseResultJson {
@@ -131,7 +127,6 @@ export interface ParseResultJson {
       fontSize?: number;
     }>;
     boundingBoxes: BoundingBox[];
-    tables: DetectedTable[];
   }>;
 }
 

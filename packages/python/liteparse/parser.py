@@ -14,8 +14,6 @@ from .types import (
     ParsedPage,
     TextItem,
     BoundingBox,
-    DetectedTable,
-    TableCell,
     OutputFormat,
     ImageFormat,
     ScreenshotResult,
@@ -88,34 +86,6 @@ def _parse_json_result(json_data: dict) -> ParseResult:
                 )
             )
 
-        # Parse tables
-        tables: List[DetectedTable] = []
-        for table in page_data.get("tables", []):
-            cells: List[TableCell] = []
-            for cell in table.get("cells", []):
-                cells.append(
-                    TableCell(
-                        x1=cell.get("x1", 0),
-                        y1=cell.get("y1", 0),
-                        x2=cell.get("x2", 0),
-                        y2=cell.get("y2", 0),
-                        text=cell.get("text", ""),
-                        row=cell.get("row", 0),
-                        col=cell.get("col", 0),
-                    )
-                )
-            tables.append(
-                DetectedTable(
-                    x1=table.get("x1", 0),
-                    y1=table.get("y1", 0),
-                    x2=table.get("x2", 0),
-                    y2=table.get("y2", 0),
-                    rows=table.get("rows", 0),
-                    cols=table.get("cols", 0),
-                    cells=cells,
-                )
-            )
-
         pages.append(
             ParsedPage(
                 pageNum=page_data.get("page", page_data.get("pageNum", 0)),
@@ -124,7 +94,6 @@ def _parse_json_result(json_data: dict) -> ParseResult:
                 text=page_data.get("text", ""),
                 textItems=text_items,
                 boundingBoxes=bounding_boxes,
-                tables=tables,
             )
         )
 
@@ -145,7 +114,6 @@ def _build_parse_cli_args(
     max_pages: int,
     target_pages: Optional[str],
     dpi: int,
-    table_detection: bool,
     precise_bounding_box: bool,
     skip_diagonal_text: bool,
     preserve_very_small_text: bool,
@@ -165,9 +133,6 @@ def _build_parse_cli_args(
         args.extend(["--target-pages", target_pages])
 
     args.extend(["--dpi", str(dpi)])
-
-    if not table_detection:
-        args.append("--no-tables")
 
     if not precise_bounding_box:
         args.append("--no-precise-bbox")
@@ -189,7 +154,6 @@ def _build_batch_cli_args(
     ocr_language: str,
     max_pages: int,
     dpi: int,
-    table_detection: bool,
     precise_bounding_box: bool,
     recursive: bool,
     extension_filter: Optional[str],
@@ -205,9 +169,6 @@ def _build_batch_cli_args(
     args.extend(["--ocr-language", ocr_language])
     args.extend(["--max-pages", str(max_pages)])
     args.extend(["--dpi", str(dpi)])
-
-    if not table_detection:
-        args.append("--no-tables")
 
     if not precise_bounding_box:
         args.append("--no-precise-bbox")
@@ -261,7 +222,6 @@ class LiteParse:
         max_pages: int = 1000,
         target_pages: Optional[str] = None,
         dpi: int = 150,
-        table_detection: bool = True,
         precise_bounding_box: bool = True,
         skip_diagonal_text: bool = False,
         preserve_very_small_text: bool = False,
@@ -278,7 +238,6 @@ class LiteParse:
             max_pages: Maximum number of pages to parse
             target_pages: Specific pages to parse (e.g., "1-5,10,15-20")
             dpi: DPI for rendering (affects OCR quality)
-            table_detection: Whether to detect tables
             precise_bounding_box: Whether to compute precise bounding boxes
             skip_diagonal_text: Whether to skip diagonal text
             preserve_very_small_text: Whether to preserve very small text
@@ -308,7 +267,6 @@ class LiteParse:
                 max_pages=max_pages,
                 target_pages=target_pages,
                 dpi=dpi,
-                table_detection=table_detection,
                 precise_bounding_box=precise_bounding_box,
                 skip_diagonal_text=skip_diagonal_text,
                 preserve_very_small_text=preserve_very_small_text,
@@ -350,7 +308,6 @@ class LiteParse:
         ocr_language: str = "en",
         max_pages: int = 1000,
         dpi: int = 150,
-        table_detection: bool = True,
         precise_bounding_box: bool = True,
         recursive: bool = False,
         extension_filter: Optional[str] = None,
@@ -371,7 +328,6 @@ class LiteParse:
             ocr_language: Language code for OCR
             max_pages: Maximum number of pages to parse per file
             dpi: DPI for rendering
-            table_detection: Whether to detect tables
             precise_bounding_box: Whether to compute precise bounding boxes
             recursive: Whether to recursively search subdirectories
             extension_filter: Only process files with this extension (e.g., ".pdf")
@@ -408,7 +364,6 @@ class LiteParse:
                 ocr_language=ocr_language,
                 max_pages=max_pages,
                 dpi=dpi,
-                table_detection=table_detection,
                 precise_bounding_box=precise_bounding_box,
                 recursive=recursive,
                 extension_filter=extension_filter,
