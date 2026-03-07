@@ -271,27 +271,38 @@ export class LiteParse {
           return false;
         };
 
-        // Helper to check if an OCR result spatially overlaps with existing PDF text
-        // This prevents duplicating text that PDF already extracted correctly
-        const overlapsExistingText = (ocrBbox: number[]): boolean => {
+        // Helper to check if an OCR result has SIGNIFICANT spatial overlap with existing PDF text
+        // Returns true only if the overlap covers a substantial portion of the OCR bbox
+        // This allows OCR results that partially overlap with native text (e.g., "13 torr at 25°C"
+        // where native extraction only got "25°C")
+        const hasSignificantOverlap = (ocrBbox: number[]): boolean => {
           const ocrX = ocrBbox[0] * scaleFactor;
           const ocrY = ocrBbox[1] * scaleFactor;
           const ocrW = (ocrBbox[2] - ocrBbox[0]) * scaleFactor;
           const ocrH = (ocrBbox[3] - ocrBbox[1]) * scaleFactor;
+          const ocrArea = ocrW * ocrH;
 
-          const tolerance = 2; // PDF points - tighter tolerance for existing text
+          if (ocrArea <= 0) return false;
+
+          let totalOverlapArea = 0;
           for (const item of page.textItems) {
-            const itemRight = item.x + (item.width || item.w || 0);
-            const itemBottom = item.y + (item.height || item.h || 0);
+            const itemW = item.width || item.w || 0;
+            const itemH = item.height || item.h || 0;
 
-            const overlapX = ocrX < itemRight + tolerance && ocrX + ocrW > item.x - tolerance;
-            const overlapY = ocrY < itemBottom + tolerance && ocrY + ocrH > item.y - tolerance;
+            // Calculate overlap rectangle
+            const left = Math.max(ocrX, item.x);
+            const right = Math.min(ocrX + ocrW, item.x + itemW);
+            const top = Math.max(ocrY, item.y);
+            const bottom = Math.min(ocrY + ocrH, item.y + itemH);
 
-            if (overlapX && overlapY) {
-              return true;
+            if (left < right && top < bottom) {
+              totalOverlapArea += (right - left) * (bottom - top);
             }
           }
-          return false;
+
+          // Only consider it a duplicate if >50% of OCR area overlaps with native text
+          const overlapRatio = totalOverlapArea / ocrArea;
+          return overlapRatio > 0.5;
         };
 
         const ocrTextItems: TextItem[] = ocrResults
@@ -305,9 +316,11 @@ export class LiteParse {
             return true;
           })
           .filter((r) => {
-            // Skip OCR results that spatially overlap with existing PDF text
+            // Skip OCR results that have significant overlap with existing PDF text
             // This prevents duplicating text that PDF already extracted correctly
-            return !overlapsExistingText(r.bbox);
+            // But allows OCR results that only partially overlap (e.g., when native
+            // extraction missed part of the text)
+            return !hasSignificantOverlap(r.bbox);
           })
           .map((r) => ({
             str: r.text,

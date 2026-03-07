@@ -349,6 +349,13 @@ export class PdfJsEngine implements PdfEngine {
       // (e.g., form feed chars that sneak into ligatures like "fi")
       decodedStr = stripControlChars(decodedStr);
 
+      // Skip empty text items after all processing - these indicate font encoding
+      // failures. Mark as garbled regions so OCR can fill them in.
+      if (decodedStr.trim().length === 0) {
+        garbledTextRegions.push({ x: left, y: top, width, height });
+        continue;
+      }
+
       textItems.push({
         str: decodedStr,
         x: left,

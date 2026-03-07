@@ -77,8 +77,10 @@ export class TesseractEngine implements OcrEngine {
         }
       }
 
-      // Filter out low confidence results (below 30%)
-      return results.filter((r) => r.confidence > 0.3);
+      // Filter out low confidence results (below 10%)
+      // Lowered from 30% to capture more text from challenging documents
+      // Higher-level deduplication in parser.ts handles false positives
+      return results.filter((r) => r.confidence > 0.1);
     } catch (error) {
       console.error(`\nTesseract OCR error for ${imagePath}:`, error);
       return [];
