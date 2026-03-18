@@ -1,50 +1,26 @@
 ---
-title: Getting Started
-description: Install LiteParse and parse your first document in under a minute.
+title: What is LiteParse?
+description: Fast, local PDF parsing with spatial text extraction, OCR, and bounding boxes.
 sidebar:
-  order: 1
+  order: 0
 ---
 
-LiteParse is an open-source PDF parsing tool that parses text with spatial layout information and bounding boxes. It runs entirely on your machine, which means no cloud dependencies, no LLMs, no API keys.
+LiteParse is an open-source document parsing library that extracts text with spatial layout information and bounding boxes. It runs entirely on your machine, with no cloud dependencies, no LLMs, no API keys.
 
-## Installation
+LiteParse is designed specifically for use cases that require fast, accurate text extraction: real-time applications, coding agents, and local workflows. It provides a simple CLI and library API for parsing PDFs, Office documents, and images, with built-in OCR support.
 
-```bash
-# npm (recommended)
-npm i -g @llamaindex/liteparse
+## What can LiteParse do?
 
-# brew (macOS/Linux)
-brew tap run-llama/liteparse
-brew install llamaindex-liteparse
-```
+- **Parse PDFs** with precise spatial layout. Text comes back positioned where it appears on the page
+- **Extract bounding boxes** for every text line, ready for downstream processing or visualization
+- **OCR scanned documents** using built-in Tesseract.js or plug in your own OCR server
+- **Parse Office files and images** with support for DOCX, XLSX, PPTX, PNG, JPG, and more via automatic conversion
+- **Screenshot PDF pages** as high-quality images for LLM-based workflows
+- **Use from TypeScript, Python, or the CLI** — whatever fits your stack
 
-## Quick start
+## Get started
 
-Once installed, you can start parsing immediately from the command line:
-
-```bash
-lit parse document.pdf
-
-# Save output to a text file
-lit parse document.pdf -o output.txt
-
-# Get structured JSON with bounding boxes
-lit parse document.pdf --format json -o output.json
-
-# Parse only specific pages
-lit parse document.pdf --target-pages "1-5,10,15-20"
-
-# Parse an entire directory of PDFs into an output directory
-lit batch-parse ./pdfs ./outputs
-
-# Screenshot the pages of a PDF for LLM agents
-lit screenshot document.pdf -o ./screenshots
-```
-
-## Next steps
-
-- [OCR Servers](./ocr) — configure Tesseract, EasyOCR, PaddleOCR, or bring your own
-- [Multi-format support](./multi-format) — parse DOCX, XLSX, PPTX, images, and more
-- [Agent skill](./agent-skill) — use LiteParse as a coding agent skill
-- [CLI reference](./cli-reference) — complete command and option reference
-- [API reference](./api) — TypeScript library types and methods
+- [Getting started](/liteparse/getting_started/): Install LiteParse and parse your first document.
+- [Library usage](/liteparse/guides/library-usage/): Use LiteParse from TypeScript or Python code.
+- [CLI reference](/liteparse/cli-reference/): Complete command and option reference.
+- [API reference](/liteparse/api/): TypeScript library types and methods.
