@@ -1,10 +1,33 @@
 import { vi, describe, it, expect, afterEach } from "vitest";
 import { EventEmitter } from "events";
 
-const mockFd = {
-  read: vi.fn(),
-  close: vi.fn(),
-};
+const mockFileTypeFromFile = vi.fn();
+vi.mock("file-type", () => ({
+  fileTypeFromFile: (...args: unknown[]) => mockFileTypeFromFile(...args),
+  fileTypeFromBuffer: vi.fn(async (data: Buffer | Uint8Array) => {
+    // Replicate enough detection to validate the wrapper
+    if (data.length >= 4 && data[0] === 0x25 && data[1] === 0x50 && data[2] === 0x44 && data[3] === 0x46) {
+      return { ext: "pdf", mime: "application/pdf" };
+    }
+    if (data.length >= 8 && data[0] === 0x89 && data[1] === 0x50 && data[2] === 0x4e && data[3] === 0x47) {
+      return { ext: "png", mime: "image/png" };
+    }
+    if (data.length >= 3 && data[0] === 0xff && data[1] === 0xd8 && data[2] === 0xff) {
+      return { ext: "jpg", mime: "image/jpeg" };
+    }
+    if (
+      data.length >= 4 &&
+      ((data[0] === 0x49 && data[1] === 0x49 && data[2] === 0x2a && data[3] === 0x00) ||
+        (data[0] === 0x4d && data[1] === 0x4d && data[2] === 0x00 && data[3] === 0x2a))
+    ) {
+      return { ext: "tif", mime: "image/tiff" };
+    }
+    if (data.length >= 4 && data[0] === 0x50 && data[1] === 0x4b) {
+      return { ext: "zip", mime: "application/zip" };
+    }
+    return undefined;
+  }),
+}));
 
 const mockProc = {
   stdout: new EventEmitter(),
@@ -22,9 +45,6 @@ vi.mock("fs", async () => {
   return {
     ...actual,
     promises: {
-      open: vi.fn(async () => {
-        return mockFd;
-      }),
       access: vi.fn(async (path: string, _mode?: number) => {
         console.log(path);
         const toErrorPath = [
@@ -62,20 +82,19 @@ import {
 } from "./convertToPdf";
 
 describe("test guessFileExtension", () => {
-  it("detects PDF", async () => {
-    mockFd.read.mockImplementation((buffer: Buffer) => {
-      Buffer.from("%PDF").copy(buffer);
-    });
-
+  it("detects PDF via file-type", async () => {
+    mockFileTypeFromFile.mockResolvedValue({ ext: "pdf", mime: "application/pdf" });
     expect(await guessFileExtension("/some/file")).toBe(".pdf");
   });
 
-  it("detects PNG", async () => {
-    mockFd.read.mockImplementation((buffer: Buffer) => {
-      Buffer.from([0x89, 0x50, 0x4e, 0x47]).copy(buffer);
-    });
-
+  it("detects PNG via file-type", async () => {
+    mockFileTypeFromFile.mockResolvedValue({ ext: "png", mime: "image/png" });
     expect(await guessFileExtension("/some/file")).toBe(".png");
+  });
+
+  it("defaults to .pdf when file-type returns undefined", async () => {
+    mockFileTypeFromFile.mockResolvedValue(undefined);
+    expect(await guessFileExtension("/some/file")).toBe(".pdf");
   });
 
   it("returns extension directly if present", async () => {
@@ -238,44 +257,44 @@ describe("test convertToPdf", () => {
 });
 
 describe("test guessExtensionFromBuffer", () => {
-  it("detects PDF from magic bytes", () => {
+  it("detects PDF from magic bytes", async () => {
     const pdfBytes = Buffer.from("%PDF-1.4 some content");
-    expect(guessExtensionFromBuffer(pdfBytes)).toBe(".pdf");
+    expect(await guessExtensionFromBuffer(pdfBytes)).toBe(".pdf");
   });
 
-  it("detects PNG from magic bytes", () => {
+  it("detects PNG from magic bytes", async () => {
     const pngBytes = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
-    expect(guessExtensionFromBuffer(pngBytes)).toBe(".png");
+    expect(await guessExtensionFromBuffer(pngBytes)).toBe(".png");
   });
 
-  it("detects JPEG from magic bytes", () => {
+  it("detects JPEG from magic bytes", async () => {
     const jpegBytes = Buffer.from([0xff, 0xd8, 0xff, 0xe0, 0x00, 0x10]);
-    expect(guessExtensionFromBuffer(jpegBytes)).toBe(".jpg");
+    expect(await guessExtensionFromBuffer(jpegBytes)).toBe(".jpg");
   });
 
-  it("detects TIFF (little-endian) from magic bytes", () => {
+  it("detects TIFF (little-endian) from magic bytes", async () => {
     const tiffBytes = Buffer.from([0x49, 0x49, 0x2a, 0x00]);
-    expect(guessExtensionFromBuffer(tiffBytes)).toBe(".tiff");
+    expect(await guessExtensionFromBuffer(tiffBytes)).toBe(".tif");
   });
 
-  it("detects TIFF (big-endian) from magic bytes", () => {
+  it("detects TIFF (big-endian) from magic bytes", async () => {
     const tiffBytes = Buffer.from([0x4d, 0x4d, 0x00, 0x2a]);
-    expect(guessExtensionFromBuffer(tiffBytes)).toBe(".tiff");
+    expect(await guessExtensionFromBuffer(tiffBytes)).toBe(".tif");
   });
 
-  it("detects ZIP-based formats from magic bytes", () => {
+  it("detects ZIP-based formats from magic bytes", async () => {
     const zipBytes = Buffer.from([0x50, 0x4b, 0x03, 0x04]);
-    expect(guessExtensionFromBuffer(zipBytes)).toBe(".docx");
+    expect(await guessExtensionFromBuffer(zipBytes)).toBe(".zip");
   });
 
-  it("defaults to .pdf for unknown bytes", () => {
+  it("defaults to .pdf for unknown bytes", async () => {
     const unknownBytes = Buffer.from([0x00, 0x01, 0x02, 0x03]);
-    expect(guessExtensionFromBuffer(unknownBytes)).toBe(".pdf");
+    expect(await guessExtensionFromBuffer(unknownBytes)).toBe(".pdf");
   });
 
-  it("works with Uint8Array input", () => {
+  it("works with Uint8Array input", async () => {
     const pdfBytes = new Uint8Array(Buffer.from("%PDF-1.7"));
-    expect(guessExtensionFromBuffer(pdfBytes)).toBe(".pdf");
+    expect(await guessExtensionFromBuffer(pdfBytes)).toBe(".pdf");
   });
 });
 

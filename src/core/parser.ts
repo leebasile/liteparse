@@ -123,7 +123,7 @@ export class LiteParse {
       doc = await this.pdfEngine.loadDocument(pdfPath);
     } else {
       log(`Processing buffer input (${input.byteLength} bytes)`);
-      const ext = guessExtensionFromBuffer(input);
+      const ext = await guessExtensionFromBuffer(input);
 
       if (ext === ".pdf") {
         // Zero-disk path: pass bytes directly to the PDF engine
