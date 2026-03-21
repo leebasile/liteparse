@@ -19,6 +19,8 @@ from liteparse_eval.providers import (
     LiteparseProvider,
     MarkItDownProvider,
     PyMuPDFProvider,
+    PyMuPDF4LLMMarkdownProvider,
+    PyMuPDF4LLMTextProvider,
     PyPDFProvider,
 )
 
@@ -122,6 +124,8 @@ def get_provider_instance(provider_name: str) -> ParserProvider:
     """Create a fresh provider instance by name."""
     providers = {
         "pymupdf": PyMuPDFProvider,
+        "pymupdf4llm-md": PyMuPDF4LLMMarkdownProvider,
+        "pymupdf4llm-text": PyMuPDF4LLMTextProvider,
         "pypdf": PyPDFProvider,
         "markitdown": MarkItDownProvider,
         "liteparse": LiteparseProvider,
@@ -288,8 +292,8 @@ def main():
         "--providers",
         type=str,
         nargs="+",
-        choices=["pymupdf", "pypdf", "markitdown", "liteparse"],
-        default=["pymupdf", "pypdf", "markitdown", "liteparse"],
+        choices=["pymupdf", "pymupdf4llm-md", "pymupdf4llm-text", "pypdf", "markitdown", "liteparse"],
+        default=["pymupdf", "pymupdf4llm-md", "pymupdf4llm-text", "pypdf", "markitdown", "liteparse"],
         help="Parse providers to benchmark (default: all local providers)"
     )
     parser.add_argument(

@@ -20,6 +20,8 @@ from liteparse_eval.providers import (
     LiteparseProvider,
     MarkItDownProvider,
     PyMuPDFProvider,
+    PyMuPDF4LLMMarkdownProvider,
+    PyMuPDF4LLMTextProvider,
     PyPDFProvider,
 )
 
@@ -423,7 +425,7 @@ def main():
     parser.add_argument(
         "--parse-provider",
         type=str,
-        choices=["pymupdf", "pypdf", "markitdown", "liteparse"],
+        choices=["pymupdf", "pymupdf4llm-md", "pymupdf4llm-text", "pypdf", "markitdown", "liteparse"],
         default="liteparse",
         help="Parse provider to use for text extraction. (default: liteparse)"
     )
@@ -440,6 +442,10 @@ def main():
     # Initialize parser provider
     if args.parse_provider == "pymupdf":
         parser_provider = PyMuPDFProvider()
+    elif args.parse_provider == "pymupdf4llm-md":
+        parser_provider = PyMuPDF4LLMMarkdownProvider()
+    elif args.parse_provider == "pymupdf4llm-text":
+        parser_provider = PyMuPDF4LLMTextProvider()
     elif args.parse_provider == "pypdf":
         parser_provider = PyPDFProvider()
     elif args.parse_provider == "markitdown":

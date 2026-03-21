@@ -12,6 +12,7 @@ dependencies = [
     "markitdown[all]",
     "rapidfuzz>=3.14.3",
     "liteparse @ file:///${PROJECT_ROOT}/../packages/python",
+    "pymupdf4llm>=1.27.2.2",
 ]
 
 [project.scripts]

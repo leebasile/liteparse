@@ -7,6 +7,8 @@ from liteparse_eval.providers import (
     LiteparseProvider,
     MarkItDownProvider,
     PyMuPDFProvider,
+    PyMuPDF4LLMMarkdownProvider,
+    PyMuPDF4LLMTextProvider,
     PyPDFProvider,
 )
 
@@ -18,5 +20,7 @@ __all__ = [
     "LiteparseProvider",
     "MarkItDownProvider",
     "PyMuPDFProvider",
+    "PyMuPDF4LLMMarkdownProvider",
+    "PyMuPDF4LLMTextProvider",
     "PyPDFProvider",
 ]
