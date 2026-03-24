@@ -80,3 +80,9 @@ class TestBatchParseErrors:
         with tempfile.TemporaryDirectory() as tmpdir:
             with pytest.raises(FileNotFoundError):
                 parser.batch_parse("/nonexistent/dir", tmpdir)
+
+    @pytest.mark.asyncio
+    async def test_input_dir_not_found_async(self, parser: LiteParse):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            with pytest.raises(FileNotFoundError):
+                await parser.batch_parse_async("/nonexistent/dir", tmpdir)

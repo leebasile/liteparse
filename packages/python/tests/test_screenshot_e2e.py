@@ -54,6 +54,12 @@ class TestScreenshotBasic:
         for ss in result.screenshots:
             assert ss.image_path.endswith(".jpg")
 
+    @pytest.mark.asyncio
+    async def test_screensho_async_basic(self, parser: LiteParse, invoice_pdf: Path):
+        result = await parser.screenshot_async(invoice_pdf, image_format="png")
+        assert isinstance(result, ScreenshotBatchResult)
+        assert len(result.screenshots) > 0
+
 
 class TestScreenshotOptions:
     """Test screenshot options are forwarded correctly."""

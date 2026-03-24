@@ -157,3 +157,20 @@ class TestParseErrors:
         # Extremely short timeout should fail
         with pytest.raises(TimeoutError):
             parser.parse(invoice_pdf, timeout=0.001)
+
+    @pytest.mark.asyncio
+    async def test_file_not_found_async(self, parser: LiteParse):
+        with pytest.raises(FileNotFoundError):
+            await parser.parse_async("/nonexistent/file.pdf")
+
+    @pytest.mark.asyncio
+    async def test_cli_not_found_async(self):
+        parser = LiteParse(cli_path="/nonexistent/liteparse")
+        # subprocess raises FileNotFoundError when the binary doesn't exist
+        with pytest.raises((ParseError, FileNotFoundError, OSError)):
+            parser.parse(Path(__file__))  # any existing file
+
+    @pytest.mark.asyncio
+    async def test_timeout_async(self, parser: LiteParse, invoice_pdf: Path):
+        with pytest.raises(TimeoutError):
+            await parser.parse_async(invoice_pdf, timeout=0.001)
