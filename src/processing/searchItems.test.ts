@@ -40,11 +40,18 @@ describe("searchItems", () => {
     expect(results[0].width).toBe(90);
   });
 
-  it("is case-insensitive", () => {
+  it("is case-insensitive by default", () => {
     const items = [item("Revenue Grew", 10, 20, 100)];
     const results = searchItems(items, { phrase: "revenue grew" });
     expect(results).toHaveLength(1);
     expect(results[0].text).toBe("revenue grew");
+  });
+
+  it("respects caseSensitive option", () => {
+    const items = [item("pH Level", 10, 20, 80)];
+    expect(searchItems(items, { phrase: "pH", caseSensitive: true })).toHaveLength(1);
+    expect(searchItems(items, { phrase: "ph", caseSensitive: true })).toHaveLength(0);
+    expect(searchItems(items, { phrase: "PH", caseSensitive: true })).toHaveLength(0);
   });
 
   it("returns empty array when no match", () => {

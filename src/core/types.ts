@@ -310,8 +310,14 @@ export interface JsonTextItem {
  * Options for {@link searchItems}.
  */
 export interface SearchItemsOptions {
-  /** Find text items containing this phrase (case-insensitive). Matches can span multiple adjacent items. */
+  /** Find text items containing this phrase. Matches can span multiple adjacent items. */
   phrase: string;
+  /**
+   * Whether the search should be case-sensitive.
+   *
+   * @defaultValue `false`
+   */
+  caseSensitive?: boolean;
 }
 
 /**

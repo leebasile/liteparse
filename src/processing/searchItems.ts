@@ -28,7 +28,9 @@ export function searchItems(
   options: SearchItemsOptions
 ): JsonTextItem[] {
   const results: JsonTextItem[] = [];
-  const q = options.phrase.toLowerCase();
+  const caseSensitive = options.caseSensitive ?? false;
+  const normalize = caseSensitive ? (s: string) => s : (s: string) => s.toLowerCase();
+  const q = normalize(options.phrase);
 
   let start = 0;
   while (start < items.length) {
@@ -36,13 +38,13 @@ export function searchItems(
     let found = false;
     for (let end = start; end < items.length; end++) {
       combined += (end > start ? " " : "") + items[end].text;
-      if (combined.toLowerCase().includes(q)) {
+      if (normalize(combined).includes(q)) {
         // Narrow from the left: drop leading items that aren't part of the match
         let narrowed = combined;
         let s = start;
         while (s < end) {
           const without = narrowed.slice(items[s].text.length + 1);
-          if (without.toLowerCase().includes(q)) {
+          if (normalize(without).includes(q)) {
             narrowed = without;
             s++;
           } else {
