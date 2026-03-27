@@ -97,6 +97,9 @@ lit parse document.pdf --target-pages "1-5,10,15-20"
 
 # Parse without OCR
 lit parse document.pdf --no-ocr
+
+# Parse a remote PDF
+curl -sL https://example.com/report.pdf | lit parse -
 ```
 
 ### Batch Parsing
@@ -145,7 +148,7 @@ console.log(result.text);
 
 #### Buffer / Uint8Array Input
 
-You can pass raw bytes directly instead of a file path. PDF buffers are parsed with **zero disk I/O** — no temp files are written:
+You can pass raw bytes directly instead of a file path, which is useful for remote files:
 
 ```typescript
 import { LiteParse } from '@llamaindex/liteparse';

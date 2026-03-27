@@ -1,5 +1,23 @@
 # @llamaindex/liteparse
 
+## 1.3.1
+
+### Patch Changes
+
+- [#70](https://github.com/run-llama/liteparse/pull/70) [`243dc05`](https://github.com/run-llama/liteparse/commit/243dc0556769a59cf59e6565a5657b7d2630fc97) Thanks [@saravananravi08](https://github.com/saravananravi08)! - fix: resolve standard font loading failure in Node.js
+
+## 1.3.0
+
+### Minor Changes
+
+- [#67](https://github.com/run-llama/liteparse/pull/67) [`0542758`](https://github.com/run-llama/liteparse/commit/0542758f6239a1897d7553727ce3ec58c61ea7fe) Thanks [@logan-markewich](https://github.com/logan-markewich)! - Bbox utils and tesseract error handling
+
+## 1.2.0
+
+### Minor Changes
+
+- [#56](https://github.com/run-llama/liteparse/pull/56) [`31b43f9`](https://github.com/run-llama/liteparse/commit/31b43f9666ce6df85e90a44be1e859c615bda757) Thanks [@logan-markewich](https://github.com/logan-markewich)! - Add CLI Stdin support for files, urls, etc.
+
 ## 1.1.0
 
 ### Minor Changes
