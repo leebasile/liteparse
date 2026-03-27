@@ -17,6 +17,7 @@ struct TextItem {
     y: f32,
     width: f32,
     height: f32,
+    rotation: f32,
     font_name: Option<String>,
     font_size: Option<f32>,
 }
@@ -51,20 +52,71 @@ pub fn extract(pdf_path: &str, page_num: Option<u32>) -> Result<(), Box<dyn std:
 
         for object in page.objects().iter() {
             if let Some(object) = object.as_text_object() {
-                let obj_x = object.bounds().unwrap().x1.value;
-                let obj_y = object.bounds().unwrap().y1.value;
-                let obj_w = object.width().unwrap().value;
-                // Use font size as a consistent height (pdfium heigh is very glyph-dependent)
-                let obj_h = object.scaled_font_size().value;
-                let obj_font_size = object.scaled_font_size().value;
+                let bounds = object.bounds().unwrap();
+                let obj_x = bounds.x1.value;
+                let obj_y = bounds.y1.value;
+                // Get rotation and normalize to 0-360
+                let obj_rotation = object.get_rotation_counter_clockwise_degrees();
+                let obj_rotation = if obj_rotation < 0.0 { obj_rotation + 360.0 } else { obj_rotation };
+
+                // scaled_font_size() = unscaled * matrix.d (vertical scale).
+                // For 90° rotated text, matrix.d ≈ 0, so scaled_font_size returns 0.
+                // In that case, compute from the matrix horizontal scale: sqrt(a² + b²) * unscaled.
+                let unscaled_fs = object.unscaled_font_size().value;
+                let scaled_fs = object.scaled_font_size().value;
+                let obj_font_size = if scaled_fs > 0.0 {
+                    scaled_fs
+                } else {
+                    // Use horizontal scale factor from the transformation matrix
+                    let matrix = object.matrix().unwrap();
+                    let h_scale = (matrix.a() * matrix.a() + matrix.b() * matrix.b()).sqrt();
+                    unscaled_fs * h_scale
+                };
+
+                let is_vertical = (obj_rotation > 45.0 && obj_rotation < 135.0)
+                    || (obj_rotation > 225.0 && obj_rotation < 315.0);
+                let (obj_w, obj_h) = if is_vertical {
+                    // 90°/270° — object.width()/height() return 0, use bounds + font size
+                    let bounds_h = (bounds.y2.value - bounds.y1.value).abs();
+                    (obj_font_size, f32::max(bounds_h, obj_font_size))
+                } else {
+                    // 0°/180° — normal: object.width() works, font size for height
+                    (object.width().unwrap().value, obj_font_size)
+                };
+
+                if obj_rotation > 1.0 {
+                    eprintln!(
+                        "ROTATED: text='{}' rot={:.1} bounds=({:.2},{:.2})-({:.2},{:.2}) scaled_fs={:.2}",
+                        object.text(), obj_rotation,
+                        bounds.x1.value, bounds.y1.value, bounds.x2.value, bounds.y2.value,
+                        obj_font_size
+                    );
+                }
 
                 if let Some(ref mut item) = cur_item {
                     let cur_font_size = item.font_size.unwrap_or(obj_font_size);
-                    let x_gap = obj_x - (item.x + item.width);
-                    let y_gap = (item.y - obj_y).abs();
-                    
-                    if x_gap < cur_font_size * NEGATIVE_X_GAP_THRESHOLD {
-                        // Negative gap (e.g. kerning) — start new item
+                    let rotation_matches = (item.rotation - obj_rotation).abs() < 1.0;
+                    let cur_is_vertical = (item.rotation > 45.0 && item.rotation < 135.0)
+                        || (item.rotation > 225.0 && item.rotation < 315.0);
+
+                    // For vertical text, "reading direction" is along y-axis, so swap gap roles:
+                    // - reading_gap: distance along reading direction (x for horizontal, y for vertical)
+                    // - cross_gap: distance across lines (y for horizontal, x for vertical)
+                    let (reading_gap, cross_gap) = if cur_is_vertical {
+                        let y_gap = obj_y - (item.y + item.height);
+                        let x_gap = (item.x - obj_x).abs();
+                        (y_gap, x_gap)
+                    } else {
+                        let x_gap = obj_x - (item.x + item.width);
+                        let y_gap = (item.y - obj_y).abs();
+                        (x_gap, y_gap)
+                    };
+
+                    // Vertical text glyphs commonly overlap along the reading axis,
+                    // so use a more lenient negative threshold to allow merging.
+                    let neg_threshold = if cur_is_vertical { -0.5 } else { NEGATIVE_X_GAP_THRESHOLD };
+                    if reading_gap < cur_font_size * neg_threshold || !rotation_matches {
+                        // Negative gap or rotation difference — start new item
                         text_items.push(cur_item.take().unwrap());
                         cur_item = Some(TextItem {
                             text: object.text().to_string(),
@@ -72,14 +124,20 @@ pub fn extract(pdf_path: &str, page_num: Option<u32>) -> Result<(), Box<dyn std:
                             y: obj_y,
                             width: obj_w,
                             height: obj_h,
+                            rotation: obj_rotation,
                             font_name: Some(object.font().family().to_string()),
                             font_size: Some(obj_font_size),
                         });
-                    } else if x_gap < cur_font_size * CHAR_X_GAP_THRESHOLD && y_gap < cur_font_size * CHAR_Y_GAP_THRESHOLD {
+                    } else if reading_gap < cur_font_size * CHAR_X_GAP_THRESHOLD && cross_gap < cur_font_size * CHAR_Y_GAP_THRESHOLD {
                         // Same word — merge directly
                         item.text.push_str(object.text().trim_start());
-                        item.width = (obj_x + obj_w) - item.x;
-                        item.height = f32::max(item.height, obj_h);
+                        if cur_is_vertical {
+                            item.height = (obj_y + obj_h) - item.y;
+                            item.width = f32::max(item.width, obj_w);
+                        } else {
+                            item.width = (obj_x + obj_w) - item.x;
+                            item.height = f32::max(item.height, obj_h);
+                        }
                     } else {
                         // Large gap — flush current item and start new one
                         text_items.push(cur_item.take().unwrap());
@@ -89,6 +147,7 @@ pub fn extract(pdf_path: &str, page_num: Option<u32>) -> Result<(), Box<dyn std:
                             y: obj_y,
                             width: obj_w,
                             height: obj_h,
+                            rotation: obj_rotation,
                             font_name: Some(object.font().family().to_string()),
                             font_size: Some(obj_font_size),
                         });
@@ -101,6 +160,7 @@ pub fn extract(pdf_path: &str, page_num: Option<u32>) -> Result<(), Box<dyn std:
                         y: obj_y,
                         width: obj_w,
                         height: obj_h,
+                        rotation: obj_rotation,
                         font_name: Some(object.font().family().to_string()),
                         font_size: Some(obj_font_size),
                     });

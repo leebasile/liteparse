@@ -22,6 +22,7 @@ interface RustPageOutput {
     height: number;
     font_name: string | null;
     font_size: number | null;
+    rotation: number;
   }>;
 }
 
@@ -205,6 +206,7 @@ export class LiteParseRsEngine implements PdfEngine {
         h: item.height,
         fontName: item.font_name ?? undefined,
         fontSize: item.font_size ?? undefined,
+        r: item.rotation,
       };
     });
 
