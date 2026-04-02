@@ -861,61 +861,83 @@ export function bboxToLine(
     }
   }
 
-  // try to find the bounding box that align as line and group them by line
+  // Check whether bbox can be added to the given line without collisions.
+  // When isLookback is true, a stricter check is used: only the midpoint condition
+  // is applied (not the top-edge fallback). This prevents items from a different
+  // table row from merging into a previously-created line during look-back, while
+  // preserving the original (more permissive) behavior for forward processing.
+  function canJoinLine(
+    bbox: ProjectionTextBox,
+    line: ProjectionTextBox[],
+    isLookback: boolean = false
+  ): boolean {
+    const lineMinY = Math.min(...line.map((v) => v.y));
+    const lineMaxY = Math.max(...line.map((v) => v.y + v.h));
+
+    // Check x-collision
+    for (const lineItem of line) {
+      const overlapLength =
+        Math.min(lineItem.x + lineItem.w, bbox.x + bbox.w) - Math.max(lineItem.x, bbox.x);
+      if (overlapLength > Math.max(medianWidth / 3, 5)) {
+        return false;
+      }
+    }
+
+    // Check margin mismatch
+    const lineHasMargin = line.some((b) => b.isMarginLineNumber === true);
+    const bboxIsMargin = bbox.isMarginLineNumber === true;
+    if (lineHasMargin !== bboxIsMargin) return false;
+
+    // For rotated text, use Y-tolerance based merging
+    if (bbox.rotated) {
+      const yTolerance = Math.max(medianHeight * 2, 20);
+      if (Math.abs(bbox.y - lineMinY) < yTolerance) return true;
+    }
+
+    // Condition 2: midpoint within line range
+    const midpoint = bbox.y + bbox.h * 0.5;
+    if (midpoint >= lineMinY && midpoint <= lineMaxY) return true;
+
+    // Condition 3: top within line range (forward processing only).
+    // This catches items taller than the line or at a slightly different y on
+    // the same visual row (e.g., left/right column text on a form). Skipped
+    // during look-back to prevent cross-row merges in tightly-spaced tables
+    // where adjacent rows' bounding boxes overlap.
+    if (!isLookback && bbox.y >= lineMinY && bbox.y <= lineMaxY) {
+      return true;
+    }
+
+    return false;
+  }
+
+  // Try to find the bounding box that align as line and group them by line.
+  // When an item doesn't fit the current line, look back at recently created lines
+  // in case the sort interleaved items from different rows (due to the non-transitive
+  // tolerance-based sort comparator).
+  const MAX_LINE_LOOKBACK = 5;
   const lines: ProjectionTextBox[][] = [];
   let currentLine: ProjectionTextBox[] = [];
-  let previousBbox = null;
 
   for (const bbox of textBbox) {
-    if (!previousBbox) {
+    if (currentLine.length === 0) {
       currentLine.push(bbox);
-    }
-    // This is where we define how line are build. to be improved
-    else {
-      const lineMinY = Math.min(...currentLine.map((v) => v.y));
-      const lineMaxY = Math.max(...currentLine.map((v) => v.y + v.h));
-
-      let lineCollide = false;
-      for (const currentLineItemBbox of currentLine) {
-        const overlapLenght =
-          Math.min(currentLineItemBbox.x + currentLineItemBbox.w, bbox.x + bbox.w) -
-          Math.max(currentLineItemBbox.x, bbox.x);
-        // Use a minimum threshold to tolerate small overlaps common in PDFs due to:
-        // - character spacing/kerning
-        // - floating-point precision issues
-        // - adjacent items with slightly overlapping bounding boxes
-        // We want to detect true collisions (same text rendered twice) not adjacent text
-        if (overlapLenght > Math.max(medianWidth / 3, 5)) {
-          lineCollide = true;
+    } else if (canJoinLine(bbox, currentLine)) {
+      currentLine.push(bbox);
+    } else {
+      // Look back at recently created lines
+      let addedToExisting = false;
+      for (let j = lines.length - 1; j >= Math.max(0, lines.length - MAX_LINE_LOOKBACK); j--) {
+        if (canJoinLine(bbox, lines[j], true)) {
+          lines[j].push(bbox);
+          addedToExisting = true;
           break;
         }
       }
-
-      // Don't merge margin line numbers with regular content
-      const currentLineHasMargin = currentLine.some((b) => b.isMarginLineNumber === true);
-      const bboxIsMargin = bbox.isMarginLineNumber === true;
-      const marginMismatch = currentLineHasMargin !== bboxIsMargin;
-
-      // For rotated text, use Y-tolerance based merging since heights may be inconsistent
-      const yTolerance = bbox.rotated ? Math.max(medianHeight * 2, 20) : 0;
-      const yWithinTolerance = bbox.rotated && Math.abs(bbox.y - lineMinY) < yTolerance;
-
-      if (
-        !lineCollide &&
-        !marginMismatch &&
-        (yWithinTolerance ||
-          (bbox.y + bbox.h * 0.5 >= lineMinY && bbox.y + bbox.h * 0.5 <= lineMaxY) ||
-          (bbox.y >= lineMinY && bbox.y <= lineMaxY))
-      ) {
-        currentLine.push(bbox);
-      } else {
-        if (currentLine.length) {
-          lines.push(currentLine);
-        }
+      if (!addedToExisting) {
+        lines.push(currentLine);
         currentLine = [bbox];
       }
     }
-    previousBbox = bbox;
   }
 
   if (currentLine.length) {
@@ -1019,7 +1041,7 @@ export function bboxToLine(
     const currentLineMinY = Math.min(...currentLine.map((v) => v.y));
     const currentLineMaxY = Math.max(...currentLine.map((v) => v.y + v.h));
 
-    // does the 2 line overlap?
+    // Do the 2 lines overlap in Y?
     if (previousLineMaxY > currentLineMinY && previousLineMinY < currentLineMaxY) {
       // check the bboxes of current line and prevline do not overlap
       let bboxOverlap = false;
