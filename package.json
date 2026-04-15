@@ -8,16 +8,16 @@
   "exports": {
     ".": {
       "import": "./dist/index.mjs",
-      "require": "./dist/index
+      "require": "./dist/index.js",
       "types": "./dist/index.d.ts"
     }
   },
   "scripts": {
-    "build": "tsup srcformat cjs,esm --dts",
+    "build": "tsup src/index.ts --format cjs,esm --dts",
     "dev": "tsup src/index.ts --format cjs,esm --dts --watch",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:coverage": "vitest run --coverage",
+    "test:coverage",
     "lint": "eslint src --ext .ts",
     "lint:fix": "eslint src --ext .ts --fix",
     "typecheck": "tsc --noEmit",
@@ -40,18 +40,18 @@
     "url": "https://github.com/your-org/liteparse.git"
   },
   "bugs": {
-://github.com/your-org/liteparse/issues"
+    "url": "https://github.com/your-org/liteparse/issues"
   },
-  "homepage": "https://github.com/your-org/liteparse#files": [
+  "homepage": "https://github.com/your-org/liteparse",
+  "files": [
     "dist",
     "README.md",
     "LICENSE"
   ],
   "devDependencies": {
-    "@changesets/cli": "^2.27.1",
-    "@types/node": "^20.11.0",
+    "@changesets/cli": "^2.27@types/node": "^20.11.0",
     "@typescript-eslint/eslint-plugin": "^6.19.0",
-    "@typescript-eslint/parser": "^6.19.0",
+    "@typescript-esl.19.0",
     "@vitest/coverage-v8": "^1.2.0",
     "eslint": "^8.56.0",
     "tsup": "^8.0.1",
