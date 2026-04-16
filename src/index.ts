@@ -37,7 +37,12 @@ export function createClient(
     maxRetries?: number;
   }
 ): LiteParseClient {
-  return new LiteParseClient(apiKey, options);
+  // Default to 3 retries and a 60s timeout for more resilient requests
+  return new LiteParseClient(apiKey, {
+    timeout: 60000,
+    maxRetries: 3,
+    ...options,
+  });
 }
 
 /**
